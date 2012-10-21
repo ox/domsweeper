@@ -12,15 +12,25 @@
 
 .square {
 	border: 1px solid #000;
+	color: #000;
 	display: inline-block;
+	font-size: 14pt;
 	height: 50px;
+	line-height: 50px;
 	margin: 0;
 	width: 50px;
 }
 
 .square:hover {
 	border-color: #0000FF;
-	box-shadow: 0 0 10px #000;
+	box-shadow: 0 0 15px #000;
+}
+
+.clicked,
+.clicked:hover {
+	background: #000;
+	border-color: #000;
+	color: #FFF;
 }
 
 .center {

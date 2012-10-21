@@ -66,7 +66,7 @@ $ ()->
 	app.SquareView = Backbone.View.extend {
 
 		tagName: 'a'
-		className: 'square'
+		className: 'center square'
 		template: _.template($('#square_template').html())
 
 		attributes: {
@@ -82,12 +82,14 @@ $ ()->
 
 		render: ()->
 			@$el.html(@template(@model.toJSON()))
+			if @model.get('hasBeenClicked')
+				@$el.addClass('clicked')
+				@reveal()
 			this
 
 		click: ()->
 			event.preventDefault()
 			@model.click()
-			@reveal()
 			this
 
 		reveal: ()->
@@ -96,6 +98,11 @@ $ ()->
 			else
 				numSurroundingMines = @model.numSurroundingMines()
 				@$el.text(numSurroundingMines)
+				if numSurroundingMines == 0
+					_.each @model.surroundingSquares(), (id)=>
+						square = @model.collection.getByCid("c#{id}")
+						if not square.get('isMine') and not square.get('hasBeenClicked')
+							square.click()
 			this
 
 	}
@@ -117,6 +124,7 @@ $ ()->
 				@$el.append(squareView.render().el)
 
 			$('#game').html(@el)
+
 	}
 
 	app.boardView = new app.BoardView()

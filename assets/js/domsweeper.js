@@ -76,7 +76,7 @@
     app.board = new app.Board();
     app.SquareView = Backbone.View.extend({
       tagName: 'a',
-      className: 'square',
+      className: 'center square',
       template: _.template($('#square_template').html()),
       attributes: {
         'href': '#'
@@ -89,21 +89,34 @@
       },
       render: function() {
         this.$el.html(this.template(this.model.toJSON()));
+        if (this.model.get('hasBeenClicked')) {
+          this.$el.addClass('clicked');
+          this.reveal();
+        }
         return this;
       },
       click: function() {
         event.preventDefault();
         this.model.click();
-        this.reveal();
         return this;
       },
       reveal: function() {
-        var numSurroundingMines;
+        var numSurroundingMines,
+          _this = this;
         if (this.model.get('isMine')) {
           this.$el.text('DEAD');
         } else {
           numSurroundingMines = this.model.numSurroundingMines();
           this.$el.text(numSurroundingMines);
+          if (numSurroundingMines === 0) {
+            _.each(this.model.surroundingSquares(), function(id) {
+              var square;
+              square = _this.model.collection.getByCid("c" + id);
+              if (!square.get('isMine') && !square.get('hasBeenClicked')) {
+                return square.click();
+              }
+            });
+          }
         }
         return this;
       }
