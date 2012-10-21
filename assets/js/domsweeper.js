@@ -22,16 +22,10 @@
     app.Board = Backbone.Collection.extend({
       model: app.Square,
       initialize: function(rows, cols, numMines) {
-        if (rows == null) {
-          rows = 8;
-        }
-        if (cols == null) {
-          cols = 8;
-        }
-        if (numMines == null) {
-          numMines = 10;
-        }
-        return this.generateSquares(rows, cols, numMines);
+        this.rows = rows != null ? rows : 8;
+        this.cols = cols != null ? cols : 8;
+        this.numMines = numMines != null ? numMines : 10;
+        return this.generateSquares(this.rows, this.cols, this.numMines);
       },
       generateSquares: function(rows, cols, numMines) {
         var square, squares, _i, _j, _len, _ref, _results;
@@ -86,7 +80,7 @@
       },
       render: function() {
         var _this = this;
-        app.board.each(function(square, i) {
+        app.board.each(function(square) {
           var squareView;
           squareView = new app.SquareView({
             model: square

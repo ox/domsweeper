@@ -18,6 +18,11 @@
 	width: 50px;
 }
 
+.square:hover {
+	border-color: #0000FF;
+	box-shadow: 0 0 10px #000;
+}
+
 .center {
 	text-align: center;
 }

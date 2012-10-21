@@ -18,8 +18,8 @@ $ ()->
 	app.Board = Backbone.Collection.extend {
 		model: app.Square
 
-		initialize: (rows=8, cols=8, numMines=10)->
-			@generateSquares(rows, cols, numMines)
+		initialize: (@rows=8, @cols=8, @numMines=10)->
+			@generateSquares(@rows, @cols, @numMines)
 
 		generateSquares: (rows, cols, numMines)->
 			squares = _.shuffle([0..rows*cols-1])
@@ -74,7 +74,7 @@ $ ()->
 			@render()
 
 		render: ()->
-			app.board.each (square, i)=>
+			app.board.each (square)=>
 				squareView = new app.SquareView {
 					model: square
 				}
