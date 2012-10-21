@@ -8,6 +8,11 @@
 	width: 402px; /* Extra 2px because of 1px border */
 }
 
+#announcement {
+	font-size: 32pt;
+	text-transform: uppercase;
+}
+
 /* Classes */
 
 .square {
@@ -29,8 +34,28 @@
 .clicked,
 .clicked:hover {
 	background: #000;
-	border-color: #000;
+	border-color: #FFF;
+	box-shadow: none;
 	color: #FFF;
+}
+
+.mine,
+.mine:hover {
+	background: #FF0000;
+	box-shadow: none;
+}
+
+.flag {
+	background: #0000FF;
+}
+
+.alert-box {
+	margin: 0 auto;
+	width: 400px;
+}
+
+.row {
+	margin-bottom: 15px;
 }
 
 .center {

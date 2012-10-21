@@ -1,130 +1,161 @@
-window.app = {}
+game = {
+	announceWin: ()->
+		$('#announcement').addClass('alert-box success').text('You won!')
+
+	announceLoss: ()->
+		$('#announcement').addClass('alert-box alert').text('You lost!')
+
+	resetAnnouncement: ()->
+		$('#announcement').removeAttr('class').text('')
+}
 
 $ ()->
-	app.Square = Backbone.Model.extend {
-		defaults: {
-			hasBeenClicked: false
-			isFlagged: false
+	newGame = ()->
+		game.resetAnnouncement()
+
+		game.Square = Backbone.Model.extend {
+			defaults: {
+				hasBeenClicked: false
+				isFlagged: false
+			}
+
+			click: ()->
+				@set({'hasBeenClicked': true})
+				this
+
+			numSurroundingMines: ()->
+				mines = _.filter @surroundingSquares(), (id)=>
+					@collection.at(id).get('isMine')
+
+				mines.length
+
+			surroundingSquares: ()->
+				rows = @collection.rows
+				cols = @collection.cols
+
+				squares = []
+				
+				left   = if @id % rows == 0          then undefined else @id-1
+				right  = if @id % rows == rows-1     then undefined else @id + 1
+				top    = if @id - cols < 0           then undefined else @id-cols
+				bottom = if @id + cols > rows*cols-1 then undefined else @id+cols
+
+				topLeft     = if left  and top    then top-1    else undefined
+				topRight    = if right and top    then top+1    else undefined
+				bottomLeft  = if left  and bottom then bottom-1 else undefined
+				bottomRight = if right and bottom then bottom+1 else undefined
+
+				squares = [left, right, top, bottom, topLeft, topRight, bottomLeft, bottomRight]
+				squares.filter (square)->
+					square != undefined
 		}
 
-		click: ()->
-			@set({'hasBeenClicked': true})
-			this
+		game.Board = Backbone.Collection.extend {
+			model: game.Square
 
-		getID: ()->
-			parseInt(@cid.substring(1))
+			initialize: (@rows=8, @cols=8, @numMines=10)->
+				@gameOver = false
+				@lost = false
+				@generateSquares(@rows, @cols, @numMines)
 
-		numSurroundingMines: ()->
-			mines = _.filter @surroundingSquares(), (id)=>
-				@collection.getByCid("c#{id}").get('isMine')
+			generateSquares: (rows, cols, numMines)->
+				squares = _.shuffle([0..rows*cols-1])
+				for square, i in squares
+					@add new game.Square {
+						isMine: square < numMines
+						id: i
+					}
+				this
 
-			mines.length
+			numClicked: ()->
+				@size()
 
-		surroundingSquares: ()->
-			cid = @getID()
-			rows = @collection.rows
-			cols = @collection.cols
+			hitMine: ()->
+				@gameOver = true
+				@lost = true
+				_.each @models, (square)->
+					square.click()
+				game.announceLoss()
 
-			squares = []
-			
-			left   = if cid % rows == 0          then undefined else cid-1
-			right  = if cid % rows == rows-1     then undefined else cid + 1
-			top    = if cid - cols < 0           then undefined else cid-cols
-			bottom = if cid + cols > rows*cols-1 then undefined else cid+cols
-
-			topLeft     = if left  and top    then top-1    else undefined
-			topRight    = if right and top    then top+1    else undefined
-			bottomLeft  = if left  and bottom then bottom-1 else undefined
-			bottomRight = if right and bottom then bottom+1 else undefined
-
-			squares = [left, right, top, bottom, topLeft, topRight, bottomLeft, bottomRight]
-			squares.filter (square)->
-				square != undefined
-	}
-
-	app.Board = Backbone.Collection.extend {
-		model: app.Square
-
-		initialize: (@rows=8, @cols=8, @numMines=10)->
-			@generateSquares(@rows, @cols, @numMines)
-
-		generateSquares: (rows, cols, numMines)->
-			squares = _.shuffle([0..rows*cols-1])
-			for square in squares
-				@add new app.Square {
-					isMine: square < numMines
-				}
-			this
-
-		numClicked: ()->
-			@size()
-
-	}
-
-	app.board = new app.Board()
-
-	app.SquareView = Backbone.View.extend {
-
-		tagName: 'a'
-		className: 'center square'
-		template: _.template($('#square_template').html())
-
-		attributes: {
-			'href': '#'
+			checkIfWon: ()->
+				won = not @lost and _.all @models, (square)->
+					(square.get('isMine') and not square.get('hasBeenClicked')) or
+					(not square.get('isMine') and square.get('hasBeenClicked'))
+				if won
+					@gameOver = true
+					game.announceWin()
 		}
 
-		events: {
-			'click': 'click'
+		game.board = new game.Board()
+
+		game.SquareView = Backbone.View.extend {
+
+			tagName: 'a'
+			className: 'center square'
+			template: _.template($('#square_template').html())
+
+			attributes: {
+				'href': '#'
+			}
+
+			events: {
+				'click': 'click'
+			}
+
+			initialize: ()->
+				@model.on('change', @render, @)
+				@model.on('change', @model.collection.checkIfWon, @model.collection)
+
+			render: ()->
+				@$el.html(@template(@model.toJSON()))
+				if @model.get('hasBeenClicked')
+					@$el.addClass('clicked')
+					@reveal()
+				this
+
+			click: ()->
+				event.preventDefault()
+				@model.click()
+				this
+
+			reveal: ()->
+				if @model.get('isMine')
+					@$el.addClass('mine')
+					if not game.board.gameOver
+						game.board.hitMine()
+				else
+					numSurroundingMines = @model.numSurroundingMines()
+					@$el.text(numSurroundingMines)
+					if numSurroundingMines == 0
+						_.each @model.surroundingSquares(), (id)=>
+							square = @model.collection.at(id)
+							if not square.get('isMine') and not square.get('hasBeenClicked')
+								square.click()
+				this
+
 		}
 
-		initialize: ()->
-			@model.on('change', @render, @)
+		game.BoardView = Backbone.View.extend {
 
-		render: ()->
-			@$el.html(@template(@model.toJSON()))
-			if @model.get('hasBeenClicked')
-				@$el.addClass('clicked')
-				@reveal()
-			this
+			id: 'board'
+			template: _.template($('#board_template').html())
 
-		click: ()->
-			event.preventDefault()
-			@model.click()
-			this
+			initialize: ()->
+				@render()
 
-		reveal: ()->
-			if @model.get('isMine')
-				@$el.text('DEAD')
-			else
-				numSurroundingMines = @model.numSurroundingMines()
-				@$el.text(numSurroundingMines)
-				if numSurroundingMines == 0
-					_.each @model.surroundingSquares(), (id)=>
-						square = @model.collection.getByCid("c#{id}")
-						if not square.get('isMine') and not square.get('hasBeenClicked')
-							square.click()
-			this
+			render: ()->
+				game.board.each (square)=>
+					squareView = new game.SquareView {
+						model: square
+					}
 
-	}
+					@$el.append(squareView.render().el)
 
-	app.BoardView = Backbone.View.extend {
+				$('#game').html(@el)
 
-		id: 'board'
-		template: _.template($('#board_template').html())
+		}
 
-		initialize: ()->
-			@render()
-
-		render: ()->
-			app.board.each (square)=>
-				squareView = new app.SquareView {
-					model: square
-				}
-
-				@$el.append(squareView.render().el)
-
-			$('#game').html(@el)
-
-	}
-
-	app.boardView = new app.BoardView()
+		game.boardView = new game.BoardView()
+	
+	$('#new_game_button').on('click', newGame)
+	newGame()
