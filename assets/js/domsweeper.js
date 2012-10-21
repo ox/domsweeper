@@ -29,11 +29,10 @@
           });
           return this;
         },
-        flag: function() {
+        flagToggle: function() {
           this.set({
-            'isFlagged': true
+            'isFlagged': !this.get('isFlagged')
           });
-          console.log('wtf');
           return this;
         },
         numSurroundingMines: function() {
@@ -137,6 +136,8 @@
             this.reveal();
           } else if (this.model.get('isFlagged')) {
             this.$el.addClass('flagged');
+          } else if (!this.model.get('isFlagged')) {
+            this.$el.removeClass('flagged');
           }
           return this;
         },
@@ -147,7 +148,7 @@
               this.model.click();
               break;
             case 3:
-              this.model.flag();
+              this.model.flagToggle();
           }
           return this;
         },

@@ -23,9 +23,8 @@ $ ()->
 				@set({'hasBeenClicked': true})
 				this
 
-			flag: ()->
-				@set({'isFlagged': true})
-				console.log 'wtf'
+			flagToggle: ()->
+				@set({'isFlagged': not @get('isFlagged')})
 				this
 
 			numSurroundingMines: ()->
@@ -121,13 +120,15 @@ $ ()->
 					@reveal()
 				else if @model.get('isFlagged')
 					@$el.addClass('flagged')
+				else if not @model.get('isFlagged')
+					@$el.removeClass('flagged')
 				this
 
 			click: ()->
 				event.preventDefault()
 				switch event.which
 					when 1 then @model.click()
-					when 3 then @model.flag()
+					when 3 then @model.flagToggle()
 				this
 
 			reveal: ()->
