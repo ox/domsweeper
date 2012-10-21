@@ -106,6 +106,9 @@
             return (square.get('isMine') && !square.get('hasBeenClicked')) || (!square.get('isMine') && square.get('hasBeenClicked'));
           });
           if (won) {
+            _.each(this.models, function(square) {
+              return square.off('change');
+            });
             this.gameOver = true;
             return game.announceWin();
           }

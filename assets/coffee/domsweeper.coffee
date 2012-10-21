@@ -87,6 +87,8 @@ $ ()->
 					(square.get('isMine') and not square.get('hasBeenClicked')) or
 					(not square.get('isMine') and square.get('hasBeenClicked'))
 				if won
+					_.each @models, (square)->
+						square.off('change')
 					@gameOver = true
 					game.announceWin()
 		}
