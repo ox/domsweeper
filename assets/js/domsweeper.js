@@ -29,6 +29,13 @@
           });
           return this;
         },
+        flag: function() {
+          this.set({
+            'isFlagged': true
+          });
+          console.log('wtf');
+          return this;
+        },
         numSurroundingMines: function() {
           var mines,
             _this = this;
@@ -110,10 +117,11 @@
         className: 'center square',
         template: _.template($('#square_template').html()),
         attributes: {
-          'href': '#'
+          'href': '#',
+          'oncontextmenu': 'return false;'
         },
         events: {
-          'click': 'click'
+          'mousedown': 'click'
         },
         initialize: function() {
           this.model.on('change', this.render, this);
@@ -124,17 +132,26 @@
           if (this.model.get('hasBeenClicked')) {
             this.$el.addClass('clicked');
             this.reveal();
+          } else if (this.model.get('isFlagged')) {
+            this.$el.addClass('flagged');
           }
           return this;
         },
         click: function() {
           event.preventDefault();
-          this.model.click();
+          switch (event.which) {
+            case 1:
+              this.model.click();
+              break;
+            case 3:
+              this.model.flag();
+          }
           return this;
         },
         reveal: function() {
           var numSurroundingMines,
             _this = this;
+          this.$el.removeClass('flagged');
           if (this.model.get('isMine')) {
             this.$el.addClass('mine');
             if (!game.board.gameOver) {

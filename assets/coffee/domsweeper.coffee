@@ -23,6 +23,11 @@ $ ()->
 				@set({'hasBeenClicked': true})
 				this
 
+			flag: ()->
+				@set({'isFlagged': true})
+				console.log 'wtf'
+				this
+
 			numSurroundingMines: ()->
 				mines = _.filter @surroundingSquares(), (id)=>
 					@collection.at(id).get('isMine')
@@ -96,10 +101,11 @@ $ ()->
 
 			attributes: {
 				'href': '#'
+				'oncontextmenu': 'return false;'
 			}
 
 			events: {
-				'click': 'click'
+				'mousedown': 'click'
 			}
 
 			initialize: ()->
@@ -111,14 +117,19 @@ $ ()->
 				if @model.get('hasBeenClicked')
 					@$el.addClass('clicked')
 					@reveal()
+				else if @model.get('isFlagged')
+					@$el.addClass('flagged')
 				this
 
 			click: ()->
 				event.preventDefault()
-				@model.click()
+				switch event.which
+					when 1 then @model.click()
+					when 3 then @model.flag()
 				this
 
 			reveal: ()->
+				@$el.removeClass('flagged')
 				if @model.get('isMine')
 					@$el.addClass('mine')
 					if not game.board.gameOver
