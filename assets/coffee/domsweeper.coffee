@@ -15,41 +15,31 @@ $ ()->
 			parseInt(@cid.substring(1))
 
 		numSurroundingMines: ()->
-			surroundingSquares = @surroundingSquares()
-			count = 0
-			_.each surroundingSquares, (id)=>
-				if id and @collection.getByCid("c#{id}").get('isMine')
-					count++
-			console.log count
-			count
+			mines = _.filter @surroundingSquares(), (id)=>
+				@collection.getByCid("c#{id}").get('isMine')
+
+			mines.length
 
 		surroundingSquares: ()->
 			cid = @getID()
 			rows = @collection.rows
 			cols = @collection.cols
+
+			squares = []
 			
 			left   = if cid % rows == 0          then undefined else cid-1
 			right  = if cid % rows == rows-1     then undefined else cid + 1
 			top    = if cid - cols < 0           then undefined else cid-cols
 			bottom = if cid + cols > rows*cols-1 then undefined else cid+cols
 
-
 			topLeft     = if left  and top    then top-1    else undefined
 			topRight    = if right and top    then top+1    else undefined
 			bottomLeft  = if left  and bottom then bottom-1 else undefined
 			bottomRight = if right and bottom then bottom+1 else undefined
 
-			{
-				left: left
-				right: right
-				top: top
-				bottom: bottom
-				topLeft: topLeft
-				topRight: topRight
-				bottomLeft: bottomLeft
-				bottomRight: bottomRight
-			}
-
+			squares = [left, right, top, bottom, topLeft, topRight, bottomLeft, bottomRight]
+			squares.filter (square)->
+				square != undefined
 	}
 
 	app.Board = Backbone.Collection.extend {
@@ -91,7 +81,7 @@ $ ()->
 			@model.on('change', @render, @)
 
 		render: ()->
-			@$el.html(@template(@model.toJSON())).text(@model.getID())
+			@$el.html(@template(@model.toJSON()))
 			this
 
 		click: ()->
@@ -102,8 +92,10 @@ $ ()->
 
 		reveal: ()->
 			if @model.get('isMine')
+				@$el.text('DEAD')
 			else
 				numSurroundingMines = @model.numSurroundingMines()
+				@$el.text(numSurroundingMines)
 			this
 
 	}
@@ -125,8 +117,6 @@ $ ()->
 				@$el.append(squareView.render().el)
 
 			$('#game').html(@el)
-
-
 	}
 
 	app.boardView = new app.BoardView()

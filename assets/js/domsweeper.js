@@ -19,23 +19,19 @@
         return parseInt(this.cid.substring(1));
       },
       numSurroundingMines: function() {
-        var count, surroundingSquares,
+        var mines,
           _this = this;
-        surroundingSquares = this.surroundingSquares();
-        count = 0;
-        _.each(surroundingSquares, function(id) {
-          if (id && _this.collection.getByCid("c" + id).get('isMine')) {
-            return count++;
-          }
+        mines = _.filter(this.surroundingSquares(), function(id) {
+          return _this.collection.getByCid("c" + id).get('isMine');
         });
-        console.log(count);
-        return count;
+        return mines.length;
       },
       surroundingSquares: function() {
-        var bottom, bottomLeft, bottomRight, cid, cols, left, right, rows, top, topLeft, topRight;
+        var bottom, bottomLeft, bottomRight, cid, cols, left, right, rows, squares, top, topLeft, topRight;
         cid = this.getID();
         rows = this.collection.rows;
         cols = this.collection.cols;
+        squares = [];
         left = cid % rows === 0 ? void 0 : cid - 1;
         right = cid % rows === rows - 1 ? void 0 : cid + 1;
         top = cid - cols < 0 ? void 0 : cid - cols;
@@ -44,16 +40,10 @@
         topRight = right && top ? top + 1 : void 0;
         bottomLeft = left && bottom ? bottom - 1 : void 0;
         bottomRight = right && bottom ? bottom + 1 : void 0;
-        return {
-          left: left,
-          right: right,
-          top: top,
-          bottom: bottom,
-          topLeft: topLeft,
-          topRight: topRight,
-          bottomLeft: bottomLeft,
-          bottomRight: bottomRight
-        };
+        squares = [left, right, top, bottom, topLeft, topRight, bottomLeft, bottomRight];
+        return squares.filter(function(square) {
+          return square !== void 0;
+        });
       }
     });
     app.Board = Backbone.Collection.extend({
@@ -98,7 +88,7 @@
         return this.model.on('change', this.render, this);
       },
       render: function() {
-        this.$el.html(this.template(this.model.toJSON())).text(this.model.getID());
+        this.$el.html(this.template(this.model.toJSON()));
         return this;
       },
       click: function() {
@@ -110,9 +100,10 @@
       reveal: function() {
         var numSurroundingMines;
         if (this.model.get('isMine')) {
-
+          this.$el.text('DEAD');
         } else {
           numSurroundingMines = this.model.numSurroundingMines();
+          this.$el.text(numSurroundingMines);
         }
         return this;
       }
