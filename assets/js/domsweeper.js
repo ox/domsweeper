@@ -17,6 +17,43 @@
       },
       getID: function() {
         return parseInt(this.cid.substring(1));
+      },
+      numSurroundingMines: function() {
+        var count, surroundingSquares,
+          _this = this;
+        surroundingSquares = this.surroundingSquares();
+        count = 0;
+        _.each(surroundingSquares, function(id) {
+          if (id && _this.collection.getByCid("c" + id).get('isMine')) {
+            return count++;
+          }
+        });
+        console.log(count);
+        return count;
+      },
+      surroundingSquares: function() {
+        var bottom, bottomLeft, bottomRight, cid, cols, left, right, rows, top, topLeft, topRight;
+        cid = this.getID();
+        rows = this.collection.rows;
+        cols = this.collection.cols;
+        left = cid % rows === 0 ? void 0 : cid - 1;
+        right = cid % rows === rows - 1 ? void 0 : cid + 1;
+        top = cid - cols < 0 ? void 0 : cid - cols;
+        bottom = cid + cols > rows * cols - 1 ? void 0 : cid + cols;
+        topLeft = left && top ? top - 1 : void 0;
+        topRight = right && top ? top + 1 : void 0;
+        bottomLeft = left && bottom ? bottom - 1 : void 0;
+        bottomRight = right && bottom ? bottom + 1 : void 0;
+        return {
+          left: left,
+          right: right,
+          top: top,
+          bottom: bottom,
+          topLeft: topLeft,
+          topRight: topRight,
+          bottomLeft: bottomLeft,
+          bottomRight: bottomRight
+        };
       }
     });
     app.Board = Backbone.Collection.extend({
@@ -61,14 +98,22 @@
         return this.model.on('change', this.render, this);
       },
       render: function() {
-        this.$el.html(this.template(this.model.toJSON()));
+        this.$el.html(this.template(this.model.toJSON())).text(this.model.getID());
         return this;
       },
       click: function() {
+        event.preventDefault();
         this.model.click();
+        this.reveal();
         return this;
       },
       reveal: function() {
+        var numSurroundingMines;
+        if (this.model.get('isMine')) {
+
+        } else {
+          numSurroundingMines = this.model.numSurroundingMines();
+        }
         return this;
       }
     });
