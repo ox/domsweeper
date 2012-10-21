@@ -41,12 +41,12 @@
 
 .mine,
 .mine:hover {
-	background: #FF0000;
+	background: url('../img/mine.png');
 	box-shadow: none;
 }
 
 .flagged {
-	background: #0000FF;
+	background: url('../img/flag.png');
 }
 
 .alert-box {
